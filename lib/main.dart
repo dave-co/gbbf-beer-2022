@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:gbbf2022/beerMeta.dart';
 import 'beerlist.dart';
 import 'beer.dart';
 
@@ -65,17 +66,39 @@ class _MyHomePageState extends State<MyHomePage> {
   bool styleSearch = false;
   bool countrySearch = false;
 
+  final int abvDivisions = 13;
+  final double maxAbv = 13;
   RangeValues abvRange = const RangeValues(3.8, 12);
 
   bool onlyShowWants = false;
   bool onlyShowFavourites = false;
   bool onlyShowTried = false;
 
+  var beerMetaData = [];
+
   void _search(){
     debugPrint("beer - _search on \"${searchTextController.text}\" searching fields: "
         "${nameSearch == true ? 'name ' : ''}${notesSearch == true ? 'notes ' : ''}${brewerySearch == true ? 'brewery ' : ''}"
         "${barSearch == true ? 'bar ' : ''}${styleSearch == true ? 'style ' : ''}${countrySearch == true ? 'country ' : ''} within abv range ${abvRange.start} to ${abvRange.end}" );
 
+  }
+
+  bool _showBeer(Beer beer) {
+    // check abv first, if outside the range we don't care about the rest of the search options
+    if(beer.abv < abvRange.start || (abvRange.end != maxAbv && beer.abv > abvRange.end)){
+      return false;
+    }
+    String text = searchTextController.text.toLowerCase();
+    if(nameSearch    && beer.name.toLowerCase().contains(text)){return true;}
+    if(notesSearch   && beer.notes.toLowerCase().contains(text)){return true;}
+    if(brewerySearch && beer.brewery.toLowerCase().contains(text)){return true;}
+    if(barSearch     && beer.barCode.toLowerCase().contains(text)){return true;}
+    if(styleSearch   && beer.style.toLowerCase().contains(text)){return true;}
+    if(countrySearch && beer.country.toLowerCase().contains(text)){return true;}
+    if(!nameSearch && !notesSearch && !brewerySearch && !barSearch && !styleSearch && !countrySearch){
+      return true;
+    }
+    return false;
   }
 
   void _incrementCounter() {
@@ -122,40 +145,59 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Stack(
         children: [
           ListView.builder(
+            itemCount: beers.length,
               itemBuilder: (BuildContext context, int i) {
-                return Column(children: [const Divider(height: 10,),
-                  Row(
-                      children: [
-                        Expanded(
-                            flex: 4,
-                            child: Text('${beers[i].name}')
-                        ),
-                        Expanded(
-                            flex: 2,
-                            child: Text('${beers[i].abv}%')
-                        ),
-                        const Expanded(
-                            flex: 2,
-                            child: Text(' ')
-                        )
-
-                      ]),
-                  Row(
-                      children: [
-                        Expanded(
-                            flex: 4,
-                            child: Text('  ${beers[i].brewery}')
-                        ),
-                        Expanded(
-                            flex: 2,
-                            child: Text('${beers[i].style}')
-                        ),
-                        Expanded(
-                            flex: 2,
-                            child: Text('${beers[i].barCode}')
-                        )
-                      ])
-                ]);
+                return GestureDetector(
+                  onTap: (){
+                    setState(() {
+                      beerMetaData[i].showDetail = !beerMetaData[i].showDetail;
+                    });
+                  },
+                  child: Visibility(
+                    visible: _showBeer(beers[i]),
+                      child: Column(
+                        children: [
+                              const Divider(height: 10,),
+                              Row(
+                                  children: [
+                                    Expanded(
+                                        flex: 4,
+                                        child: Text('${beers[i].name}')
+                                    ),
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('${beers[i].abv}%')
+                                    ),
+                                    const Expanded(
+                                        flex: 2,
+                                        child: Text(' ')
+                                    )
+                                  ]),
+                              Row(
+                                  children: [
+                                    Expanded(
+                                        flex: 4,
+                                        child: Text('  ${beers[i].brewery}')
+                                    ),
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('${beers[i].style}')
+                                    ),
+                                    Expanded(
+                                        flex: 2,
+                                        child: Text('${beers[i].barCode}')
+                                    )
+                                  ]),
+                              Visibility(
+                                  visible: beerMetaData[i].showDetail,
+                                  child: Row(
+                                    children: [
+                                      Expanded(child: Text('${beers[i].notes}'))
+                                    ],
+                                  ))
+                            ])
+                    )
+                );
               }),
           Visibility(
               visible: showSearch,
@@ -273,8 +315,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         RangeSlider(
                             values: abvRange,
-                            max: 20, //TODO tweak based on max abv in list
-
+                            divisions: abvDivisions,
+                            max: maxAbv,
                             onChanged: (RangeValues values) {
                               setState(() {
                                 abvRange = values;
@@ -353,12 +395,18 @@ class _MyHomePageState extends State<MyHomePage> {
       return beer;
     });
 
+    final m = List.generate(allBeers.length, (index) {
+      // TODO may need to change when loading saved metadata
+      return BeerMeta(false);
+    });
+
     // for(var i = 0; i < allBeers.length; i++){
     // }
     debugPrint("beers.length=${b.length}");
 
     setState(() {
       beers = b;
+      beerMetaData = m;
     });
   }
 }
