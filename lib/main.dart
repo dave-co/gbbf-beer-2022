@@ -66,6 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
   bool styleSearch = false;
   bool countrySearch = false;
 
+  bool showHandpull = true;
+  bool showKeyKeg = true;
+  bool showBottles = false;
+
   final int abvDivisions = 13;
   final double maxAbv = 13;
   RangeValues abvRange = const RangeValues(3.8, 12);
@@ -88,6 +92,11 @@ class _MyHomePageState extends State<MyHomePage> {
     if(beer.abv < abvRange.start || (abvRange.end != maxAbv && beer.abv > abvRange.end)){
       return false;
     }
+    // now check dispense method
+    if(beer.dispenseMethod == "Handpull" && !showHandpull || beer.dispenseMethod == "KeyKeg" && !showKeyKeg || beer.dispenseMethod == "Bottle" && !showBottles){
+      return false;
+    }
+
     String text = searchTextController.text.toLowerCase();
     if(nameSearch    && beer.name.toLowerCase().contains(text)){return true;}
     if(notesSearch   && beer.notes.toLowerCase().contains(text)){return true;}
@@ -95,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if(barSearch     && beer.barCode.toLowerCase().contains(text)){return true;}
     if(styleSearch   && beer.style.toLowerCase().contains(text)){return true;}
     if(countrySearch && beer.country.toLowerCase().contains(text)){return true;}
+
     if(!nameSearch && !notesSearch && !brewerySearch && !barSearch && !styleSearch && !countrySearch){
       return true;
     }
@@ -168,10 +178,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                         flex: 2,
                                         child: Text('${beers[i].abv}%')
                                     ),
-                                    const Expanded(
+                                    Expanded(
                                         flex: 2,
-                                        child: Text(' ')
-                                    )
+                                        child: Text('${beers[i].dispenseMethod}')
+                                    ),
+                                    // const Expanded(
+                                    //     flex: 0,
+                                    //     child: Text(' ')
+                                    // ),
                                   ]),
                               Row(
                                   children: [
@@ -184,9 +198,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                         child: Text('${beers[i].style}')
                                     ),
                                     Expanded(
-                                        flex: 2,
+                                        flex: 1,
                                         child: Text('${beers[i].barCode}')
-                                    )
+                                    ),
+                                    const Expanded(
+                                        flex: 1,
+                                        child: Text('Want')
+                                    ),
                                   ]),
                               Visibility(
                                   visible: beerMetaData[i].showDetail,
@@ -203,7 +221,7 @@ class _MyHomePageState extends State<MyHomePage> {
               visible: showSearch,
               child: Container(
                 color: Colors.white,
-                height: 310, // TODO tweak this
+                height: 410, // TODO tweak this
                 child: Column(
                   children: [
                     Row(
@@ -229,7 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             onChanged: (bool? value){
                               setState((){
                                 nameSearch = !nameSearch;
-                                _search();
+                                // _search();
                               });
                             },
                           )
@@ -242,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               onChanged: (bool? value){
                                 setState((){
                                   notesSearch = !notesSearch;
-                                  _search();
+                                  // _search();
                                 });
                               },
                             )
@@ -256,7 +274,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               onChanged: (bool? value){
                                 setState((){
                                   brewerySearch = !brewerySearch;
-                                  _search();
+                                  // _search();
                                 });
                               },
                             )
@@ -273,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     barSearch = !barSearch;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -286,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     styleSearch = !styleSearch;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -300,7 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     countrySearch = !countrySearch;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -320,11 +338,55 @@ class _MyHomePageState extends State<MyHomePage> {
                             onChanged: (RangeValues values) {
                               setState(() {
                                 abvRange = values;
-                                _search();
+                                // _search();
                               });
                             }
                         )
                       ],
+                    ),
+                    Row(
+                        children :[
+                          Expanded(
+                              flex: 2,
+                              child: CheckboxListTile(
+                                title: const Text('Bottle'),
+                                value: showBottles,
+                                onChanged: (bool? value){
+                                  setState((){
+                                    showBottles = !showBottles;
+                                    // _search();
+                                  });
+                                },
+                              )
+                          ),
+                          Expanded(
+                              flex: 2,
+                              child: CheckboxListTile(
+                                title: const Text('Keykeg'),
+                                value: showKeyKeg,
+                                onChanged: (bool? value){
+                                  setState((){
+                                    showKeyKeg = !showKeyKeg;
+                                    // _search();
+                                  });
+                                },
+                              )
+                          ),
+                          Expanded(
+                              flex: 2,
+                              child: CheckboxListTile(
+                                title: const Text('Handpull'),
+                                value: showHandpull,
+                                contentPadding: const EdgeInsets.all(5),
+                                onChanged: (bool? value){
+                                  setState((){
+                                    showHandpull = !showHandpull;
+                                    // _search();
+                                  });
+                                },
+                              )
+                          )
+                        ]
                     ),
                     Row(
                         children :[
@@ -336,7 +398,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     onlyShowWants = !onlyShowWants;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -349,7 +411,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     onlyShowTried = !onlyShowTried;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -363,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onChanged: (bool? value){
                                   setState((){
                                     onlyShowFavourites = !onlyShowFavourites;
-                                    _search();
+                                    // _search();
                                   });
                                 },
                               )
@@ -382,7 +444,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
       super.initState();
-      searchTextController.addListener(_search);
+      // searchTextController.addListener(_search);
       loadBeers();
   }
 
