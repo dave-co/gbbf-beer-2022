@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:gbbf2022/beerMeta.dart';
+import 'package:gbbf2022/savedState.dart';
 import 'beerlist.dart';
 import 'beer.dart';
 
@@ -57,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var beers = [];
   bool showSearch = false;
   final searchTextController = TextEditingController();
-  String searchText = '';
+  // String searchText = '';
 
   bool nameSearch = true;
   bool notesSearch = false;
@@ -111,6 +112,17 @@ class _MyHomePageState extends State<MyHomePage> {
     return false;
   }
 
+  String _getLabel(BeerMeta beerMeta){
+    if (beerMeta.favourite == true) {
+      return 'Fave';
+    } else if (beerMeta.tried == true) {
+      return 'Tried';
+    } else if (beerMeta.want == true) {
+      return 'Want';
+    }
+    return '';
+  }
+
   void _incrementCounter() {
     debugPrint("beer - _incrementCounter");
     setState(() {
@@ -123,8 +135,18 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> executeAfterBuild() async {
+    // this code will get executed after the build method
+    // because of the way async functions are scheduled
+    debugPrint("executeAfterBuild $notesSearch");
+
+    String json = jsonEncode(SavedState(nameSearch, searchTextController.text, abvRange.start));
+    debugPrint("json=$json");
+  }
+
   @override
   Widget build(BuildContext context) {
+    executeAfterBuild();
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -201,19 +223,68 @@ class _MyHomePageState extends State<MyHomePage> {
                                         flex: 1,
                                         child: Text('${beers[i].barCode}')
                                     ),
-                                    const Expanded(
+                                    Expanded(
                                         flex: 1,
-                                        child: Text('Want')
+                                        child: Text(_getLabel(beerMetaData[i]))
                                     ),
                                   ]),
                               Visibility(
                                   visible: beerMetaData[i].showDetail,
-                                  child: Row(
-                                    children: [
-                                      Expanded(child: Text('${beers[i].notes}'))
-                                    ],
-                                  ))
-                            ])
+                                  child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(child: Text('${beers[i].notes}'))
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: CheckboxListTile(
+                                                title: const Text('Want'),
+                                                value: beerMetaData[i].want,
+                                                onChanged: (bool? value){
+                                                  setState((){
+                                                    beerMetaData[i].want = !beerMetaData[i].want;
+                                                  });
+                                                },
+                                              )
+                                            ),
+                                            Expanded(
+                                                flex: 2,
+                                                child: CheckboxListTile(
+                                                  title: const Text('Tried'),
+                                                  value: beerMetaData[i].tried,
+                                                  onChanged: (bool? value){
+                                                    setState((){
+                                                      beerMetaData[i].tried = !beerMetaData[i].tried;
+                                                      if(beerMetaData[i].tried == true && beerMetaData[i].want == true) {
+                                                        beerMetaData[i].want = false;
+                                                      }
+                                                    });
+                                                  },
+                                                )
+                                            ),
+                                            Expanded(
+                                                flex: 2,
+                                                child: CheckboxListTile(
+                                                  title: const Text('Favourite'),
+                                                  contentPadding: const EdgeInsets.all(5),
+                                                  value: beerMetaData[i].favourite,
+                                                  onChanged: (bool? value){
+                                                    setState((){
+                                                      beerMetaData[i].favourite = !beerMetaData[i].favourite;
+                                                    });
+                                                  },
+                                                )
+                                            )
+                                          ],
+                                        )
+                                ])
+                              )
+                            ]
+                      )
                     )
                 );
               }),
@@ -445,10 +516,22 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
       super.initState();
       // searchTextController.addListener(_search);
-      loadBeers();
+      _loadStaticBeers();
+      _createMetaData();
+      _loadSavedState();
   }
 
-  void loadBeers() {
+  void _createMetaData() {
+    final m = List.generate(allBeers.length, (index) {
+      // TODO may need to change when loading saved metadata
+      return BeerMeta(false);
+    });
+    beerMetaData = m;
+    // setState(() {
+    // });
+  }
+
+  void _loadStaticBeers() {
     debugPrint("allBeers.length=${allBeers.length}");
     final b = List.generate(allBeers.length, (index) {
       // debugPrint("allBeers[$index]=${allBeers[index]}");
@@ -457,18 +540,20 @@ class _MyHomePageState extends State<MyHomePage> {
       return beer;
     });
 
-    final m = List.generate(allBeers.length, (index) {
-      // TODO may need to change when loading saved metadata
-      return BeerMeta(false);
-    });
-
-    // for(var i = 0; i < allBeers.length; i++){
-    // }
     debugPrint("beers.length=${b.length}");
 
-    setState(() {
-      beers = b;
-      beerMetaData = m;
-    });
+    beers = b;
+    // setState(() {
+    // });
+  }
+
+  void _loadSavedState() {
+    var test = '{"nameSearch":true,"searchText":"ipa","abvMin":3.8}';
+    SavedState savedState = SavedState.fromJson(jsonDecode(test));
+    debugPrint("nameSearch=${savedState.nameSearch} searchText=${savedState.searchText} abvMin=${savedState.abvMin}");
+
+    nameSearch = savedState.nameSearch;
+    searchTextController.text = savedState.searchText;
+    // abvRange.start = savedState.abvMin
   }
 }
