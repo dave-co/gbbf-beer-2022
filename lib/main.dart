@@ -98,6 +98,10 @@ class _MyHomePageState extends State<MyHomePage> {
     if(beer.dispenseMethod == "Handpull" && !showHandpull || beer.dispenseMethod == "KeyKeg" && !showKeyKeg || beer.dispenseMethod == "Bottle" && !showBottles){
       return false;
     }
+    BeerMeta beerMeta = beerMetaData[beer.id];
+    if(onlyShowTried == true && !beerMeta.tried){return false;}
+    if(onlyShowWants == true && !beerMeta.want){return false;}
+    if(onlyShowFavourites == true && !beerMeta.favourite){return false;}
 
     String text = searchTextController.text.toLowerCase();
     if(nameSearch    && beer.name.toLowerCase().contains(text)){return true;}
