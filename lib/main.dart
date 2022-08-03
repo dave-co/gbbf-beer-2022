@@ -80,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool onlyShowFavourites = false;
   bool onlyShowTried = false;
 
-  var beerMetaData = [];
+  List<BeerMeta> beerMetaData = [];
 
   void _search(){
     debugPrint("beer - _search on \"${searchTextController.text}\" searching fields: "
@@ -140,7 +140,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // this code will get executed after the build method
     // because of the way async functions are scheduled
     final prefs = await SharedPreferences.getInstance();
-    debugPrint("executeAfterBuild $notesSearch");
 
     String json = jsonEncode(SavedState(
         showSearch,
@@ -158,8 +157,11 @@ class _MyHomePageState extends State<MyHomePage> {
         abvRange.end,
         onlyShowWants,
         onlyShowFavourites,
-        onlyShowTried));
-    debugPrint("json=$json");
+        onlyShowTried,
+        beerMetaData
+    ));
+    debugPrint("executeAfterBuild - saving state");
+    // debugPrint("json=$json");
     prefs.setString("state", json);
   }
 
@@ -573,8 +575,8 @@ class _MyHomePageState extends State<MyHomePage> {
       String json = prefs.getString("state") ?? '';
       if (json.isNotEmpty) {
         SavedState savedState = SavedState.fromJson(jsonDecode(json));
-        debugPrint("nameSearch=${savedState.nameSearch} searchText=${savedState
-            .searchText} abvMin=${savedState.abvMin}");
+        // debugPrint("nameSearch=${savedState.nameSearch} searchText=${savedState
+        //     .searchText} abvMin=${savedState.abvMin}");
 
         showSearch = savedState.showSearch;
         searchTextController.text = savedState.searchText;
@@ -591,6 +593,8 @@ class _MyHomePageState extends State<MyHomePage> {
         onlyShowWants = savedState.onlyShowWants;
         onlyShowTried = savedState.onlyShowTried;
         onlyShowFavourites = savedState.onlyShowFavourites;
+        beerMetaData = savedState.beerMetaList;
+        debugPrint("Saved state loaded");
       }
     } catch(e){
       debugPrint('Failed to load saved state');

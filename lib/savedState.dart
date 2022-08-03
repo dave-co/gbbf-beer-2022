@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import 'beerMeta.dart';
@@ -24,6 +26,8 @@ class SavedState{
   bool onlyShowFavourites;
   bool onlyShowTried;
 
+  List<BeerMeta> beerMetaList;
+
   SavedState(
       this.showSearch,
       this.searchText,
@@ -40,28 +44,36 @@ class SavedState{
       this.abvMax,
       this.onlyShowWants,
       this.onlyShowFavourites,
-      this.onlyShowTried
+      this.onlyShowTried,
+      this.beerMetaList
       );
 
-  Map toJson() => {
-    "showSearch" : showSearch,
-    "searchText" : searchText,
-    "nameSearch" : nameSearch,
-    "notesSearch" : notesSearch,
-    "brewerySearch" : brewerySearch,
-    "barSearch" : barSearch,
-    "styleSearch" : styleSearch,
-    "countrySearch" : countrySearch,
-    "showHandpull" : showHandpull,
-    "showKeyKeg" : showKeyKeg,
-    "showBottles" : showBottles,
-    "abvMin" : abvMin,
-    "abvMax" : abvMax,
-    "onlyShowWants" : onlyShowWants,
-    "onlyShowFavourites" : onlyShowFavourites,
-    "onlyShowTried" : onlyShowTried
-  };
+  Map toJson() {
+    List<Map>? beerMeta = beerMetaList.map((i) => i.toJson()).toList();
+    return {
+      "showSearch": showSearch,
+      "searchText": searchText,
+      "nameSearch": nameSearch,
+      "notesSearch": notesSearch,
+      "brewerySearch": brewerySearch,
+      "barSearch": barSearch,
+      "styleSearch": styleSearch,
+      "countrySearch": countrySearch,
+      "showHandpull": showHandpull,
+      "showKeyKeg": showKeyKeg,
+      "showBottles": showBottles,
+      "abvMin": abvMin,
+      "abvMax": abvMax,
+      "onlyShowWants": onlyShowWants,
+      "onlyShowFavourites": onlyShowFavourites,
+      "onlyShowTried": onlyShowTried,
+      "beerMeta" : beerMeta
+    };
+  }
+
   factory SavedState.fromJson(dynamic json) {
+    var beerMetaJsonAll = json['beerMeta'] as List;
+    List<BeerMeta> beerMeta = beerMetaJsonAll.map((beerMetaJson) => BeerMeta.fromJson(beerMetaJson)).toList();
     return SavedState(
         json['showSearch'] as bool,
         json['searchText'] as String,
@@ -78,6 +90,8 @@ class SavedState{
         json['abvMax'] as double,
         json['onlyShowWants'] as bool,
         json['onlyShowFavourites'] as bool,
-        json['onlyShowTried'] as bool);
+        json['onlyShowTried'] as bool,
+        beerMeta
+    );
   }
 }
