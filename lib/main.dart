@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:gbbf2022/beerMeta.dart';
 import 'package:gbbf2022/savedState.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'beerlist.dart';
 import 'beer.dart';
 
@@ -138,10 +139,28 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> executeAfterBuild() async {
     // this code will get executed after the build method
     // because of the way async functions are scheduled
+    final prefs = await SharedPreferences.getInstance();
     debugPrint("executeAfterBuild $notesSearch");
 
-    String json = jsonEncode(SavedState(nameSearch, searchTextController.text, abvRange.start));
+    String json = jsonEncode(SavedState(
+        showSearch,
+        searchTextController.text,
+        nameSearch,
+        notesSearch,
+        brewerySearch,
+        barSearch,
+        styleSearch,
+        countrySearch,
+        showHandpull,
+        showKeyKeg,
+        showBottles,
+        abvRange.start,
+        abvRange.end,
+        onlyShowWants,
+        onlyShowFavourites,
+        onlyShowTried));
     debugPrint("json=$json");
+    prefs.setString("state", json);
   }
 
   @override
@@ -547,13 +566,43 @@ class _MyHomePageState extends State<MyHomePage> {
     // });
   }
 
-  void _loadSavedState() {
-    var test = '{"nameSearch":true,"searchText":"ipa","abvMin":3.8}';
-    SavedState savedState = SavedState.fromJson(jsonDecode(test));
-    debugPrint("nameSearch=${savedState.nameSearch} searchText=${savedState.searchText} abvMin=${savedState.abvMin}");
+  Future _loadSavedState() async {
+    // var test = '{"nameSearch":true,"searchText":"ipa","abvMin":3.8}';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String json = prefs.getString("state") ?? '';
+      if (json.isNotEmpty) {
+        SavedState savedState = SavedState.fromJson(jsonDecode(json));
+        debugPrint("nameSearch=${savedState.nameSearch} searchText=${savedState
+            .searchText} abvMin=${savedState.abvMin}");
 
-    nameSearch = savedState.nameSearch;
-    searchTextController.text = savedState.searchText;
-    // abvRange.start = savedState.abvMin
+        showSearch = savedState.showSearch;
+        searchTextController.text = savedState.searchText;
+        nameSearch = savedState.nameSearch;
+        notesSearch = savedState.notesSearch;
+        brewerySearch = savedState.brewerySearch;
+        barSearch = savedState.barSearch;
+        styleSearch = savedState.styleSearch;
+        countrySearch = savedState.countrySearch;
+        showHandpull = savedState.showHandpull;
+        showKeyKeg = savedState.showKeyKeg;
+        showBottles = savedState.showBottles;
+        abvRange = RangeValues(savedState.abvMin, savedState.abvMax);
+        onlyShowWants = savedState.onlyShowWants;
+        onlyShowTried = savedState.onlyShowTried;
+        onlyShowFavourites = savedState.onlyShowFavourites;
+      }
+    } catch(e){
+      debugPrint('Failed to load saved state');
+      debugPrint(e.toString());
+
+      const snackBar = SnackBar(
+        content: Text('Failed to load saved state'),
+      );
+
+      // Find the ScaffoldMessenger in the widget tree
+      // and use it to show a SnackBar.
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
   }
 }
