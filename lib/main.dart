@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final int abvDivisions = 13;
   final double maxAbv = 13;
-  RangeValues abvRange = const RangeValues(3.8, 12);
+  RangeValues abvRange = const RangeValues(4, 12);
 
   bool onlyShowWants = false;
   bool onlyShowFavourites = false;
@@ -167,6 +167,47 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint("executeAfterBuild - saving state");
     // debugPrint("json=$json");
     prefs.setString("state", json);
+  }
+
+  List<Widget> _createRatingStars(BeerMeta beerMeta, beerId) {
+    // GestureDetector one = GestureDetector(
+    //   child: beerMeta.rating < 1 ? const Icon(Icons.star_outline_rounded) : const Icon(Icons.star_rate_rounded),
+    // );
+    List<Widget> stars = [
+      Expanded(flex: 2, child: beerMeta.rating == 0
+          ? const Text('Rating: ')
+          :  GestureDetector(
+              onTap: (){
+                setState(() {
+                  beerMetaData[beerId].rating = 0;
+                });
+              },
+              child: const Text('Clear'),
+        )
+      ),
+      _createStar(1, beerMeta.rating, beerId),
+      _createStar(2, beerMeta.rating, beerId),
+      _createStar(3, beerMeta.rating, beerId),
+      _createStar(4, beerMeta.rating, beerId),
+      _createStar(5, beerMeta.rating, beerId),
+      const Expanded(flex: 2, child: Text(''),)
+    ];
+    return stars;
+  }
+
+  GestureDetector _createStar(int threshold, int rating, int beerId) {
+    return GestureDetector(
+      onTap: (){
+        setState(() {
+          beerMetaData[beerId].rating = threshold;
+        });
+      },
+      child: rating < threshold
+          // ignore: prefer_const_constructors
+          ? Icon(color: Colors.yellow, Icons.star_outline_rounded)
+          // ignore: prefer_const_constructors
+          : Icon(color: Colors.yellow, Icons.star_rate_rounded),
+    );
   }
 
   @override
@@ -305,7 +346,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                                 )
                                             )
                                           ],
+                                        ),
+                                        Visibility(
+                                          visible: beerMetaData[i].tried,
+                                          child: Row(
+                                            children: _createRatingStars(beerMetaData[i], i)
+                                          )
                                         )
+                                        
                                 ])
                               )
                             ]
@@ -425,9 +473,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         const Padding(
                           padding: EdgeInsets.only(left: 17),
-                          child: Text('ABV', textScaleFactor: 1.1),
+                          child: Text('ABV  ', textScaleFactor: 1.1),
                         ),
-                        RangeSlider(
+                        Text('${abvRange.start}'),
+                        Expanded(child:
+                          RangeSlider(
                             values: abvRange,
                             divisions: abvDivisions,
                             max: maxAbv,
@@ -437,6 +487,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                 // _search();
                               });
                             }
+                          )
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 15),
+                          child: Text('${abvRange.end}${abvRange.end == maxAbv ? '+': ''}'),
                         )
                       ],
                     ),
