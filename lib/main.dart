@@ -365,19 +365,41 @@ class _MyHomePageState extends State<MyHomePage> {
               visible: showSearch,
               child: Container(
                 color: Colors.white,
-                height: 410, // TODO tweak this
+                height: 395, // TODO tweak this
                 child: Column(
                   children: [
                     Row(
                       children: [
                         Expanded(
+                          flex: 8,
+                          child: Padding(
+                          padding: const EdgeInsets.only(top: 8, left: 5, right : 5),
                             child: TextField(
                               controller: searchTextController,
                               decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  labelText: 'Search...'
+                                  labelText: 'Search for...'
                               ),
                             )
+                          )
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8, right : 8),
+                            child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                searchTextController.text = '';
+                              });
+                            },
+                            child: const Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                              size: 36,
+                            )
+                          )
+                          )
                         )
                       ],
                     ),
